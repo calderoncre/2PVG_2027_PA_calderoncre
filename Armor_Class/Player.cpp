@@ -1,4 +1,5 @@
 #include "Player.hpp"
+#include <cassert>
 
 void Player::changeLife(int change)
 {
@@ -29,22 +30,18 @@ void buyPotion(Player &p)
 
 void fallInLava(Player &p)
 {
-    p.changeLife(-50);
+    p.takeDamage(50);
 }
 
 void pickUpBoots(Player &p)
 {
     if (p.changeSpeed(10))
-    {
         printf("speed cambiada correctamente \n");
-    }
     else
-    {
         printf("speed cambiada maaaal \n");
-    }
 }
 
-void Player::equipArmor(Armor &armor_type) // tipo
+void Player::equipArmor(const Armor &armor_type) // tipo
 {
     int max_slots = 10;
     int slot = 0;
@@ -57,10 +54,7 @@ void Player::equipArmor(Armor &armor_type) // tipo
         return;
     armor_[slot] = new Armor{armor_type};
     if (armor_[slot] != nullptr)
-    {
-        armor_count_++;
         printf("armor asignada a slot \n");
-    }
     else
         printf("armor ha fallado asignando slot\n");
 
@@ -101,23 +95,32 @@ void Player::equipArmor(Armor &armor_type) // tipo
     // }
 }
 
-void Player::unequipArmor(int slot)
+void Player::takeDamage(int damage)
 {
-    if (armor_[slot] != nullptr)
+    int reducedDamage = damage;
+    for (int i = 0; i < 10; i++)
     {
-        delete armor_[slot];
-        armor_[slot] = nullptr;
+        if (armor_[i] == nullptr)
+            continue;
+        reducedDamage = armor_[i]->applyDamageReduction(reducedDamage);
+        if (armor_[i]->isDestroyed())
+        {
+            // free single armor
+            delete armor_[i];
+            armor_[i] = nullptr;
+        }
     }
+    changeLife(-reducedDamage);
 }
 
-void Player::printCurrentArmor()
+void Player::unequipArmor(int slot)
 {
-    int max_slots = 10;
-    int slot = 0;
-    for (int slot = 0; slot < max_slots / 2; slot++)
-    {
-        printf("slot %d ---> %p \n", slot, (void *)armor_[slot]);
-    }
+    assert(slot >= 0 && "problema en armor slot");
+    assert(slot < 10 && "problema en armor slot");
+    if (armor_[slot] == nullptr)
+        return;
+    delete armor_[slot];
+    armor_[slot] = nullptr;
 }
 
 bool Player::changeSpeed(int change)
@@ -127,7 +130,26 @@ bool Player::changeSpeed(int change)
     speed_ = clamp(max_speed_, speed_ * change, 0.0f);
     return true;
 }
-
+void Player::printCurrentArmor()
+{
+    int max_slots = 10;
+    int slot = 0;
+    for (int slot = 0; slot < max_slots; slot++)
+    {
+        printf("slot %d ---> %p \n", slot, (void *)armor_[slot]);
+    }
+    printf("\n ");
+}
+void Player::printAllArmorHP() const
+{
+    for (int i = 0; i < armor_max_count_; i++)
+    {
+        if (armor_[i] == nullptr)
+            return;
+        printf("%d: %d hp // ", i, armor_[i]->getHp());
+    }
+    printf("\n ");
+}
 void Player::printPlayer()
 {
     printf("pos(%g, %g) | hp %d/%d | gold %d | speed %g\n", x_, y_, hp_, maxHp_, gold_, speed_);

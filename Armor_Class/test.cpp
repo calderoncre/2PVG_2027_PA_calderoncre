@@ -4,6 +4,9 @@ int main()
 {
     Player hero;
     Armor *armor_type = new Armor(200, 0.5f);
+    Armor *casco = new Armor(50, 0.1f);
+    Armor *calcetines = new Armor(75, 0.4f);
+
     hero.printPlayer();
 
     int precioArmadura = 200;
@@ -38,12 +41,27 @@ int main()
     hero.printCurrentArmor();
     hero.equipArmor(*armor_type);
     hero.printCurrentArmor();
+    hero.equipArmor(*armor_type);
+    hero.printCurrentArmor();
+    hero.equipArmor(*armor_type);
+    hero.printCurrentArmor();
+    hero.equipArmor(*armor_type);
+    hero.printCurrentArmor();
+    hero.equipArmor(*armor_type);
+    hero.printCurrentArmor();
+    hero.equipArmor(*armor_type);
+    hero.printCurrentArmor();
+    hero.equipArmor(*armor_type);
+    hero.printCurrentArmor();
 
     printf("unequip armor \n");
-    hero.unequipArmor(2);
+    hero.printAllArmorHP();
     hero.printCurrentArmor();
-    printf("unequip armor again\n");
-    hero.unequipArmor(1);
+    hero.unequipArmor(3);
+
+    hero.printCurrentArmor();
+    printf("AFTER REORDER: \n");
+    hero.reorderArmorList();
     hero.printCurrentArmor();
 
     printf("fall in lava twice \n");
@@ -51,6 +69,9 @@ int main()
     hero.printPlayer();
     fallInLava(hero);
     hero.printPlayer();
+
+    hero.printCurrentArmor();
+    hero.printAllArmorHP();
 
     return 0;
 }

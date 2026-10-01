@@ -1,26 +1,28 @@
 #ifndef ARMOR_HPP
 #define ARMOR_HPP
-
+#include <cassert>
 class Armor
 {
 public:
     //! constructors
     Armor()
-        : vida_{100}, proteccion_{0.3f}
+        : hp_{100}, protection{0.3f}
     {
     }
 
     Armor(int vida, float proteccion)
-        : vida_{vida}, proteccion_{proteccion}
+        : hp_{vida}, protection{proteccion}
     {
     }
 
-    // Pass the damage in, return reduced damage
-    // int applyDamageReduction(int damage);
+    int getHp() const;
+    bool isDestroyed() const;
+    int applyDamageReduction(int damage); // Pass the damage in, return reduced damage
+    void reduceLife(int damage);
 
+    const float protection; //< Fraction of damage that is absorbed. Damage reduction between 0 and 1.
 private:
-    int vida_;
-    float proteccion_; //< Fraction of damage that is absorbed
+    int hp_;
 };
 
 #endif
