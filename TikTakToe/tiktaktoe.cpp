@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cassert>
 #include "tiktaktoe.hpp"
+#include "esat/math.h"
 
 bool Tictactoe::play(int x, int y)
 {
@@ -37,6 +38,14 @@ int Tictactoe::indexarCelda(int x, int y) const
 {
     const int n_columnas = 3;
     return (n_columnas * y + x);
+}
+
+esat::Vec2 Tictactoe::desindexarCelda(int index) const
+{
+    int col = index % 3;
+    int row = index / 3;
+
+    return {(float)col, (float)row};
 }
 
 Ficha Tictactoe::getCell(int x, int y) const
