@@ -20,7 +20,7 @@ void IConsole::printBoard(Tictactoe &ttt) const
     {
         for (int j = 0; j < 3; j++)
         {
-            printf("%s ", fichaTo_string(ttt.getCell(i, j)).c_str()); // !necesita cast!?
+            printf("%s ", fichaTo_string(ttt.getCell(i, j)).c_str());
             if (j == 2)
                 printf("\n");
         }
@@ -59,19 +59,13 @@ void IConsole::printMessages()
         return;
     if (esat::Time() - message_time_ < 3000.0f)
     {
-        printf("\n \n \n \n \n %s \n", current_message_.c_str());
+        printf("%s \n", current_message_.c_str());
     }
     else
     {
         message_time_ = 0.0f;
         active_message_ = false;
     }
-}
-void IConsole::activateMessage(std::string message)
-{
-    current_message_ = message;
-    message_time_ = esat::Time();
-    active_message_ = true;
 }
 
 void IConsole::main_run(int x, int y, Tictactoe &ttt)

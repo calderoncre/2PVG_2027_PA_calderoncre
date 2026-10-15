@@ -15,6 +15,7 @@
 void IGraphics::printBoard(Tictactoe &ttt) const
 {
     drawBoard();
+    esat::DrawText(window_center().x - 250, window_center().y + 600, fichaTo_string(ttt.nextPlayer()).c_str());
     int row, col;
     for (row = 0; row < 3; row++)
     {
@@ -157,24 +158,19 @@ void IGraphics::square300x300(esat::Vec2 pos) const
 
 void IGraphics::printMessages()
 {
+
     if (!active_message_)
         return;
     double cooldown = 3000.0f;
+    esat::DrawSetFillColor(255, 255, 0, 255);
+    esat::DrawSetTextSize(20.0f);
+    esat::DrawSetTextFont("mi_fuente2.ttf");
     if (esat::Time() - message_time_ < cooldown)
     {
-        esat::DrawSetFillColor(255, 255, 0, 255);
-        esat::DrawSetTextSize(20.0f);
-        esat::DrawSetTextFont("mi_fuente2.ttf");
         esat::DrawText(window_center().x - 250, window_center().y + 500, current_message_.c_str());
     }
     else
         active_message_ = false;
-}
-void IGraphics::activateMessage(std::string message)
-{
-    current_message_ = message;
-    message_time_ = esat::Time();
-    active_message_ = true;
 }
 
 void IGraphics::main_run(int x, int y, Tictactoe &ttt)
@@ -186,6 +182,7 @@ void IGraphics::main_run(int x, int y, Tictactoe &ttt)
         esat::DrawClear(0, 0, 0);
         esat::DrawSetStrokeColor(255, 255, 255, 255);
 
+        // do always:
         printBoard(ttt);
         printMessages();
 

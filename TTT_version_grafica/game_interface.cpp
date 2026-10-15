@@ -3,12 +3,19 @@
 #include <cassert>
 #include <string>
 #include <conio.h>
+#include <esat/time.h>
 
 #include "tiktaktoe.hpp"
 #include "game_interface.hpp"
 
 // en archivo de compilacion std:c++20 para abrir filtros de hace un tiempo
 // TODO SHARED FUNCTIONS BETWEETN ICONSOLE & IGRAPHICS
+void Game_inteface::activateMessage(std::string message)
+{
+    current_message_ = message;
+    message_time_ = esat::Time();
+    active_message_ = true;
+}
 
 std::string Game_inteface::rightPlayMessage() const
 {
