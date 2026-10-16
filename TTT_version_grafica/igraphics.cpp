@@ -8,14 +8,14 @@
 #include "esat/input.h"
 #include "esat/time.h"
 #include "tiktaktoe.hpp"
-#include "game_interface.hpp"
+#include "game_flow.hpp"
 
 // TODO IGRAPHICS FUNCTIONS
 // _____________________________
 void IGraphics::printBoard(Tictactoe &ttt) const
 {
     drawBoard();
-    esat::DrawText(window_center().x - 250, window_center().y + 600, fichaTo_string(ttt.nextPlayer()).c_str());
+    esat::DrawText(window_center().x - 250, window_center().y + 600, game_messages.fichaTo_string(ttt.nextPlayer()).c_str());
     int row, col;
     for (row = 0; row < 3; row++)
     {
@@ -159,18 +159,18 @@ void IGraphics::square300x300(esat::Vec2 pos) const
 void IGraphics::printMessages()
 {
 
-    if (!active_message_)
+    if (!game_messages.active_message_)
         return;
     double cooldown = 3000.0f;
     esat::DrawSetFillColor(255, 255, 0, 255);
     esat::DrawSetTextSize(20.0f);
     esat::DrawSetTextFont("mi_fuente2.ttf");
-    if (esat::Time() - message_time_ < cooldown)
+    if (esat::Time() - game_messages.message_time_ < cooldown)
     {
-        esat::DrawText(window_center().x - 250, window_center().y + 500, current_message_.c_str());
+        esat::DrawText(window_center().x - 250, window_center().y + 500, game_messages.current_message_.c_str());
     }
     else
-        active_message_ = false;
+        game_messages.active_message_ = false;
 }
 
 void IGraphics::main_run(int x, int y, Tictactoe &ttt)
@@ -203,11 +203,11 @@ void IGraphics::main_run(int x, int y, Tictactoe &ttt)
 
             if (ttt.play(x, y))
             {
-                activateMessage(rightPlayMessage());
+                game_messages.activateMessage(game_messages.rightPlayMessage());
                 game_state = GET_VERIFY_MOVE;
             }
             else
-                activateMessage(badPlayMessage());
+                game_messages.activateMessage(game_messages.badPlayMessage());
 
             if (ttt.isGameEnded())
                 game_state = GAME_FINISHED;
@@ -217,7 +217,7 @@ void IGraphics::main_run(int x, int y, Tictactoe &ttt)
             break;
         case GAME_FINISHED:
             printf("GAME FINISHED \n");
-            activateMessage(winnerMessage(ttt.winner()));
+            game_messages.activateMessage(game_messages.winnerMessage(ttt.winner()));
             game_state = RESET;
             break;
         case RESET:

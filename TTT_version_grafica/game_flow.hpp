@@ -1,11 +1,28 @@
-#ifndef GAMEINTERFACE_HPP
-#define GAMEINTERFACE_HPP
+#ifndef GAMEFLOW_HPP
+#define GAMEFLOW_HPP
 #include <string>
 #include "esat/math.h"
 // imprimo tablero
-class Game_inteface
+
+class Game_messages
 {
 
+public:
+    void activateMessage(std::string message);
+    std::string winnerMessage(const Ficha f) const;
+    std::string rightPlayMessage() const;
+    std::string badPlayMessage() const;
+    std::string fichaTo_string(Ficha f) const;
+
+    Game_messages() : active_message_{false}, current_message_{""}, message_time_{0.0f} {};
+
+    bool active_message_;
+    std::string current_message_;
+    double message_time_;
+};
+
+class Game_Flow
+{
 public:
     enum game_states
     {
@@ -22,7 +39,10 @@ public:
     };
 
     // constructor
-    Game_inteface() : game_state{GET_VERIFY_MOVE}, active_message_{false}, current_message_{""}, message_time_{0.0f} {};
+    Game_Flow() : game_state{GET_VERIFY_MOVE} {
+
+                  };
+
     // virtual pure methods
     //  the idea is that only childs can apply and use these functions,
     //  in this case IConsole
@@ -33,22 +53,12 @@ protected:
     virtual void printMessages() = 0;
     virtual void printBoard(Tictactoe &ttt) const = 0;
 
-    void activateMessage(std::string message);
-
-    std::string winnerMessage(const Ficha f) const;
-    std::string rightPlayMessage() const;
-    std::string badPlayMessage() const;
-    std::string fichaTo_string(Ficha f) const;
-
     Tictactoe ttt;
     game_states game_state;
-
-    bool active_message_;
-    std::string current_message_;
-    double message_time_;
+    Game_messages game_messages;
 };
 
-class IConsole : public Game_inteface
+class IConsole : public Game_Flow
 {
 public:
     virtual void askPlayer(int &x, int &y, Tictactoe &ttt) override;
@@ -57,7 +67,7 @@ public:
     virtual void printMessages() override;
 };
 
-class IGraphics : public Game_inteface
+class IGraphics : public Game_Flow
 {
 private:
     const int window_width;

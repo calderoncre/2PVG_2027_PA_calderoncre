@@ -1,5 +1,5 @@
 #include "tiktaktoe.hpp"
-#include "game_interface.hpp"
+#include "game_flow.hpp"
 #include "esat/window.h"
 #include "esat/draw.h"
 #include "esat/time.h"

@@ -8,7 +8,7 @@
 #include "esat/input.h"
 #include "esat/time.h"
 #include "tiktaktoe.hpp"
-#include "game_interface.hpp"
+#include "game_flow.hpp"
 // TODO ICONSOLE FUNCTIONS
 // _____________________________
 // PARA COMPILAR:
@@ -20,7 +20,7 @@ void IConsole::printBoard(Tictactoe &ttt) const
     {
         for (int j = 0; j < 3; j++)
         {
-            printf("%s ", fichaTo_string(ttt.getCell(i, j)).c_str());
+            printf("%s ", game_messages.fichaTo_string(ttt.getCell(i, j)).c_str());
             if (j == 2)
                 printf("\n");
         }
@@ -55,16 +55,16 @@ void IConsole::askPlayer(int &x, int &y, Tictactoe &ttt)
 
 void IConsole::printMessages()
 {
-    if (!active_message_)
+    if (!game_messages.active_message_)
         return;
-    if (esat::Time() - message_time_ < 3000.0f)
+    if (esat::Time() - game_messages.message_time_ < 3000.0f)
     {
-        printf("%s \n", current_message_.c_str());
+        printf("%s \n", game_messages.current_message_.c_str());
     }
     else
     {
-        message_time_ = 0.0f;
-        active_message_ = false;
+        game_messages.message_time_ = 0.0f;
+        game_messages.active_message_ = false;
     }
 }
 
@@ -87,9 +87,9 @@ void IConsole::main_run(int x, int y, Tictactoe &ttt)
             break;
         case PROCESS_MOVE:
             if (ttt.play(x, y))
-                activateMessage(rightPlayMessage());
+                game_messages.activateMessage(game_messages.rightPlayMessage());
             else
-                activateMessage(badPlayMessage());
+                game_messages.activateMessage(game_messages.badPlayMessage());
 
             if (ttt.isGameEnded())
                 game_state = GAME_FINISHED;
@@ -105,7 +105,7 @@ void IConsole::main_run(int x, int y, Tictactoe &ttt)
                 game_state = GET_VERIFY_MOVE;
             break;
         case GAME_FINISHED:
-            activateMessage(winnerMessage(ttt.winner()));
+            game_messages.activateMessage(game_messages.winnerMessage(ttt.winner()));
             if (_kbhit())
                 game_state = RESET;
             break;
