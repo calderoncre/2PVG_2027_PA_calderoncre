@@ -1,0 +1,7 @@
+# API documentation. Run generate_docs.bat (or generate_docs.sh); open doc/html/index.html.
+PROJECT_NAME     = "Blackjack"
+INPUT            = include player src
+RECURSIVE        = YES
+OUTPUT_DIRECTORY = doc
+GENERATE_LATEX   = NO
+EXCLUDE_SYMBOLS  = *_H_

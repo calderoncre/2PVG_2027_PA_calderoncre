@@ -1,0 +1,7 @@
+build/
+bin/
+.vs/
+imgui.ini
+.DS_Store
+doc/
+tools/doxygen/
