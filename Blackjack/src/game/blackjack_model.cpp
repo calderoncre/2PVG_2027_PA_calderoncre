@@ -418,16 +418,29 @@ namespace blackjack
         return false;
     }
 
-    void BlackjackModel::settle()
+    void BlackjackModel::settle() // decidir que jugdores han ganado, perdido o empatado con el crupier
     {
         for (int seat = 0; seat < seatCount(); seat++)
         {
             for (int i = 0; i < handCount(seat); i++)
             {
+                // obtener la mano del jugador
+            HandState mano = this->hand(seat, i);
 
+            // consultar las reglas para determinar
+            //    el resultado de la mano
+            // calcular ganancias y pérdidas
+            int pago = model_rules.payout(mano, up_dcards);
+
+            // guardar el resultado
+            //    seats[seat].hand[i].state.result
+                seats[seat].hand[i].state.result = pago - seats[seat].hand[i].state.bet;
+            // actualizar las fichas del jugador
             }
+            // liquidar el seguro de este jugador
         }
     }
+    
 
     bool BlackjackModel::popEvent(ModelEvent *event)
     {
