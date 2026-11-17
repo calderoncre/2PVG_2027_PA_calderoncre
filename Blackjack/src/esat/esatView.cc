@@ -129,7 +129,6 @@ namespace blackjack
             if (click && isMouseInsideRect(positions[i], 200, 200))
             {
                 selected_player_spot = i;
-                printf("player_spot: %d\n", selected_player_spot);
             }
             /* code */
         }
@@ -576,8 +575,11 @@ namespace blackjack
             drawFloatingCard(backside_card_sprite, x, y, x * 0.03f + y * 0.02f);
             x += 30.0f;
         }
-
-        printAlphaLerpRect({spot_pos[table.currentSeat()].x - 45, spot_pos[table.currentSeat()].y - 70}, 250, 300);
+        const int seat = table.currentSeat();
+        if (seat >= 0 && seat < table.seatCount())
+        {
+            printAlphaLerpRect({spot_pos[seat].x - 45, spot_pos[seat].y - 70}, 250, 300);
+        }
     }
     bool EsatView::busy() const
     {

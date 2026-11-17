@@ -39,6 +39,7 @@ namespace blackjack
         // reparto
         int current_vuelta;
         int current_spot;
+        bool ronda_liquidada;
 
         void initTableSettings();
         void initDealerCards();
@@ -50,6 +51,8 @@ namespace blackjack
         void set_active_players();
 
     public:
+        void setRondaLiquidada(bool estado);
+        bool getRondaLiquidada() const;
         bool substractChips(int quantity, int seat);
         SeatState getSeat(int seat) const;
         void avanzarTurno();
@@ -59,7 +62,7 @@ namespace blackjack
         void reiniciarHandCount();
         bool hasHandsDepedingOnDealer();
 
-        BlackjackModel(const IRules &rules) : model_rules(rules), turno{0}, hand_count{0}, players_waiting{true}
+        BlackjackModel(const IRules &rules) : model_rules(rules), turno{0}, hand_count{0}, players_waiting{true}, ronda_liquidada{false}
         {
             initTableSettings();
             for (int i = 0; i < kMaxSeats; i++)

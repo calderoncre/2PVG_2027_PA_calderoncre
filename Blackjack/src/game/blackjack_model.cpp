@@ -186,6 +186,8 @@ namespace blackjack
     {
         current_vuelta = 0;
         current_spot = 0;
+        turno = 0;
+        hand_count = 0;
         hidden_dcards.clear();
         up_dcards.clear();
         for (int i = 0; i < kMaxSeats; i++)
@@ -201,6 +203,7 @@ namespace blackjack
             tmp_hand.state.stake = bets[i];
             tmp_hand.state.bet = bets[i];
             seats[i].hand.push_back(tmp_hand);
+            printf("sitio: %d, chips: %d\n", i, seats[i].chips);
         }
         std::shuffle(pile_deck.begin(), pile_deck.end(), generator);
         set_active_players(); // setear jugadores activos en esta ronda
@@ -425,22 +428,30 @@ namespace blackjack
             for (int i = 0; i < handCount(seat); i++)
             {
                 // obtener la mano del jugador
-            HandState mano = this->hand(seat, i);
+                HandState mano = this->hand(seat, i);
 
-            // consultar las reglas para determinar
-            //    el resultado de la mano
-            // calcular ganancias y pérdidas
-            int pago = model_rules.payout(mano, up_dcards);
+                // consultar las reglas para determinar
+                //    el resultado de la mano
+                // calcular ganancias y pérdidas
+                int pago = model_rules.payout(mano, up_dcards);
 
-            // guardar el resultado
-            //    seats[seat].hand[i].state.result
-                seats[seat].hand[i].state.result = pago - seats[seat].hand[i].state.bet;
-            // actualizar las fichas del jugador
+                // guardar el resultado
+                //    seats[seat].hand[i].state.result
+                seats[seat].hand[i].state.result = pago - mano.bet;
+                // actualizar las fichas del jugador
+                seats[seat].chips += pago;
             }
-            // liquidar el seguro de este jugador
+            // ! liquidar el seguro de este jugador (de momento no hay seguro)
         }
     }
-    
+    void BlackjackModel::setRondaLiquidada(bool estado)
+    {
+        ronda_liquidada = estado;
+    }
+    bool BlackjackModel::getRondaLiquidada() const
+    {
+        return ronda_liquidada;
+    }
 
     bool BlackjackModel::popEvent(ModelEvent *event)
     {
@@ -449,6 +460,8 @@ namespace blackjack
 
     int BlackjackModel::currentSeat() const
     {
+        if (turno < 0 || turno >= n_active_players)
+            return -1;
         return current_playing[turno];
     }
 

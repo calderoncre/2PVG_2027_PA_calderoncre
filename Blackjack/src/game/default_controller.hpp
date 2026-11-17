@@ -16,6 +16,7 @@ namespace blackjack
         /** @return true once no more rounds will be played. */
         bool isGameOver() const override;
         bool hasBetAt(const int seat) const;
+        void limpiarInitialBets();
 
         GameRules rules;
         int bets[kMaxSeats]{};

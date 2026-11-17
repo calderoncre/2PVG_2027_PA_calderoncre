@@ -18,6 +18,7 @@ void Controller::update()
     {
     case Game_Phases::APUESTAS:
     {
+        model.setRondaLiquidada(false);
         vista.printAPUESTAS(bets);
         vista.updateAPUESTAS();
         int player_spot = vista.getSelectedPlayerSpot();
@@ -40,6 +41,7 @@ void Controller::update()
             {
                 if (hasBetAt(seat))
                 {
+                    mano_iniciada = false;
                     model.startRound(bets);
                     showing_phase = Game_Phases::REPARTO;
                     break;
@@ -110,6 +112,7 @@ void Controller::update()
         vista.updateJUEGO();
         vista.printJUEGO(model);
         vista.draw(model);
+
         if (!model.playDealer())
             showing_phase = Game_Phases::LIQUIDAR_APUESTAS;
 
@@ -119,14 +122,24 @@ void Controller::update()
         vista.printJUEGO(model);
         vista.draw(model);
 
-        model.settle();
-
+        if (!model.getRondaLiquidada())
+        {
+            model.settle();
+            model.setRondaLiquidada(true);
+            limpiarInitialBets();
+        }
+        showing_phase = Game_Phases::APUESTAS;
         break;
     default:
         break;
     }
 }
 
+void Controller::limpiarInitialBets()
+{
+    for (int i = 0; i < kMaxSeats; i++)
+        bets[i] = 0;
+}
 bool Controller::hasBetAt(const int seat) const
 {
     return seat >= 0 && seat < kMaxSeats && bets[seat] >= model.minBet() && bets[seat] <= model.maxBet() && bets[seat] <= model.chips(seat);
