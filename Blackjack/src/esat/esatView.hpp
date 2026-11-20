@@ -62,7 +62,7 @@ namespace blackjack
         esat::SpriteHandle card_sprites[kRankCount][kSuitCount]{};
         esat::SpriteHandle card_animations[4][4]{};
         esat::SpriteHandle card_animation_frames[4][4][8]{};
-        esat::SpriteHandle button_sprites[4]{};
+        esat::SpriteHandle button_sprites[5]{};
         esat::SpriteHandle chips_sprites[n_chips_types]{};
         esat::SpriteHandle backside_card_sprite = nullptr;
         esat::SpriteHandle background_card_sprite = nullptr;
@@ -94,6 +94,7 @@ namespace blackjack
         esat::SpriteHandle getSpriteFromCard(Card card);
         void drawFloatingCard(esat::SpriteHandle sprite, float x, float y, float phase) const;
         void setSpotPositions();
+        void printHandSumatory(const ITable &table) const;
     };
 }
 

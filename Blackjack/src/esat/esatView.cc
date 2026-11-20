@@ -55,28 +55,28 @@ namespace blackjack
         current_move.amount = 1;
         current_move.action = Action::None;
         // TODO button split
-        if (isMouseInsideRect({win_width - 600, win_height - 100}, 125, 45) && click)
+        if (isMouseInsideRect(button_pos[0], 140, 58) && click)
         {
             current_move.action = Action::Split;
             printf("boton split!\n");
             return current_move;
         }
         // TODO buttons double
-        if (isMouseInsideRect({win_width - 450, win_height - 100}, 125, 45) && click)
+        if (isMouseInsideRect(button_pos[1], 140, 58) && click)
         {
             current_move.action = Action::Double;
             printf("boton double!\n");
             return current_move;
         }
         // TODO buttons hit
-        if (isMouseInsideRect({win_width - 300, win_height - 100}, 125, 45) && click)
+        if (isMouseInsideRect(button_pos[2], 140, 58) && click)
         {
             current_move.action = Action::Hit;
             printf("boton hit!\n");
             return current_move;
         }
         // TODO buttons stand
-        if (isMouseInsideRect({win_width - 150, win_height - 100}, 125, 45) && click)
+        if (isMouseInsideRect(button_pos[3], 140, 58) && click)
         {
             current_move.action = Action::Stand;
             printf("boton stand!\n");
@@ -108,9 +108,8 @@ namespace blackjack
             }
         }
         // repartir button
-        printColoredSquare({win_width - 600, win_height - 100}, 220, 0, 0);
         puede_repartir = false;
-        if (isMouseInsideRect({win_width - 600, win_height - 100}, 120, 45) && click)
+        if (isMouseInsideRect(button_pos[0], 140, 58) && click)
         {
             selected_chip = -1;
             selected_player_spot = -1;
@@ -140,6 +139,7 @@ namespace blackjack
         float y = esat::WindowHeight() / 2 - 120;
         esat::DrawSprite(background_card_sprite, 0, 0);
         drawFloatingCard(backside_card_sprite, x, y, x * 0.03f + y * 0.02f);
+        drawFloatingCard(button_sprites[4], button_pos[0].x, button_pos[0].y, button_pos[0].x * 0.2f + button_pos[0].y * 0.3f);
 
         for (int i = 0; i < n_chips_types; i++)
         {
@@ -179,6 +179,67 @@ namespace blackjack
             drawFloatingCard(button_sprites[i], button_pos[i].x, button_pos[i].y, button_pos[i].x * 0.2f + button_pos[i].y * 0.3f);
         }
         //! Imprimir suma total de cartas de cada jugador
+    }
+
+    int handValue(std::span<const Card> cards)
+    {
+        int total = 0;
+        int ases = 0;
+
+        for (const Card &card : cards)
+        {
+            int valor = static_cast<int>(card.rank);
+
+            if (card.rank == Rank::Ace)
+            {
+                total += 11;
+                ++ases;
+            }
+            else
+            {
+                total += valor > 10 ? 10 : valor;
+            }
+        }
+
+        while (total > 21 && ases > 0)
+        {
+            total -= 10; // un as pasa de valer 11 a valer 1
+            --ases;
+        }
+
+        return total;
+    }
+
+    void EsatView::printHandSumatory(const ITable &table) const
+    {
+        const esat::Vec2 positions[] = {
+            {win_width / 2 - 300, win_height - 320}, // O || O O
+            {100, win_height - 360},
+            {100, 200},                          // | O O
+            {win_width / 2 - 100, 60},           // O | O
+            {win_width - 300, 200},              // O O |
+            {win_width - 300, win_height - 360}, // || O O O
+            {win_width / 2 + 100, win_height - 320}};
+
+        for (int seat = 0; seat < table.seatCount(); seat++)
+        {
+            for (int n_hand = 0; n_hand < table.handCount(seat); n_hand++)
+            {
+                float x = positions[seat].x + 100;
+                float y = positions[seat].y - 50;
+                HandState hand = table.hand(seat, n_hand);
+                std::string cadena = std::to_string(handValue(hand.cards));
+
+                if (handValue(hand.cards) < 21)
+                    printColoredSquare({x, y}, 125, 125, 125);
+                else
+                    printColoredSquare({x, y}, 255, 0, 0);
+
+                esat::DrawSetStrokeColor(255, 255, 255, 255);
+                esat::DrawSetFillColor(255, 255, 255, 255);
+                esat::DrawText(x + 9, y + 26, cadena.c_str());
+            }
+        }
     }
 
     void EsatView::printAlphaLerpRect(esat::Vec2 pos, float width, float height) const
@@ -227,8 +288,8 @@ namespace blackjack
 
     void EsatView::printColoredSquare(esat::Vec2 pos, int r, int g, int b) const
     {
-        int width = 120;
-        int height = 45;
+        int width = 50;
+        int height = 35;
         float points[8]{
             pos.x, pos.y,
             pos.x + width, pos.y,
@@ -357,6 +418,7 @@ namespace blackjack
         button_sprites[1] = esat::SpriteFromFile("src/game/sprites/button_double.png");
         button_sprites[2] = esat::SpriteFromFile("src/game/sprites/button_hit.png");
         button_sprites[3] = esat::SpriteFromFile("src/game/sprites/button_stand.png");
+        button_sprites[4] = esat::SpriteFromFile("src/game/sprites/button_deal.png");
 
         //! SPRITE SHEETS A, K, Q, J
 
@@ -580,6 +642,7 @@ namespace blackjack
         {
             printAlphaLerpRect({spot_pos[seat].x - 45, spot_pos[seat].y - 70}, 250, 300);
         }
+        printHandSumatory(table);
     }
     bool EsatView::busy() const
     {

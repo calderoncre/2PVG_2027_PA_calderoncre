@@ -27,6 +27,7 @@ namespace blackjack
         // std::vector<Card> dealer_cards;
         std::vector<Card> hidden_dcards; // 1
         std::vector<Card> up_dcards;     // 1
+        std::vector<Card> discard_deck;  // cards discarded every time a round ends
         TableSettings table_settings;
         const IRules &model_rules; // consulta de reglas
         std::mt19937 generator;
@@ -40,17 +41,22 @@ namespace blackjack
         int current_vuelta;
         int current_spot;
         bool ronda_liquidada;
+        bool need_to_shuffle;
+        bool marcar_corte;
 
         void initTableSettings();
-        void initDealerCards();
+        void initDealerCards(int n_barajas);
         HandState initPlayerHand();
         void addCardtoPlayer(Card card, int seat, int hand);
         void addCardtoDealer(Card card, int vuelta);
-        Card extractLastCard();
+        Card extractLastCard(std::vector<Card> &deck);
         Card extractCard(int index);
         void set_active_players();
+        void addAllCardsToDiscardDeck_atRoundEnded();
+        void onEmptyPileDeck();
 
     public:
+        bool comprobarCorte() const;
         void setRondaLiquidada(bool estado);
         bool getRondaLiquidada() const;
         bool substractChips(int quantity, int seat);
@@ -61,15 +67,16 @@ namespace blackjack
         bool avanzarMano(int seat);
         void reiniciarHandCount();
         bool hasHandsDepedingOnDealer();
+        bool getMarcarCorte() const;
 
-        BlackjackModel(const IRules &rules) : model_rules(rules), turno{0}, hand_count{0}, players_waiting{true}, ronda_liquidada{false}
+        BlackjackModel(const IRules &rules) : model_rules(rules), turno{0}, hand_count{0}, players_waiting{true}, ronda_liquidada{false}, need_to_shuffle{true}, marcar_corte{false}
         {
             initTableSettings();
             for (int i = 0; i < kMaxSeats; i++)
                 seats[i].chips = table_settings.starting_chips;
 
             generator.seed(table_settings.seed);
-            initDealerCards();
+            initDealerCards(4);
         }
         //! ITable
         const char *rulesName() const override;
@@ -99,6 +106,7 @@ namespace blackjack
         bool playDealer() override;
         void settle() override;
         bool popEvent(ModelEvent *event) override;
+        std::span<const Card> dealerHiddenCards() const;
     };
 
 }

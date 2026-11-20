@@ -22,6 +22,8 @@ bool GameRules::dealerPeeks(std::span<const Card> dealer_up) const { return fals
 
 bool canSplit(const HandState &hand, int chips)
 {
+    if (hand.cards.size() != 2)
+        return false;
     return hand.cards[0].rank == hand.cards[1].rank && chips >= hand.stake;
 }
 bool GameRules::isAllowed(const HandState &hand, int chips, int hand_count, Action action) const

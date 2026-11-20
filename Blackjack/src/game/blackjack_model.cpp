@@ -26,19 +26,22 @@ namespace blackjack
             return false;
     }
 
-    void BlackjackModel::initDealerCards()
+    void BlackjackModel::initDealerCards(int n_barajas)
     {
-
-        for (int i = 0; i < kRankCount; i++)
+        for (int k = 0; k < n_barajas; k++)
         {
-            for (int j = 0; j < kSuitCount; j++)
+            for (int i = 0; i < kRankCount; i++)
             {
-                Rank rank = static_cast<Rank>(i + 1);
-                Suit suit = static_cast<Suit>(j);
-                Card card(rank, suit);
-                pile_deck.emplace_back(rank, suit);
+                for (int j = 0; j < kSuitCount; j++)
+                {
+                    Rank rank = static_cast<Rank>(i + 1);
+                    Suit suit = static_cast<Suit>(j);
+                    Card card(rank, suit);
+                    pile_deck.emplace_back(rank, suit);
+                }
             }
         }
+
         printf("cartas añadidas: %d\n", static_cast<int>(pile_deck.size()));
     }
 
@@ -85,15 +88,23 @@ namespace blackjack
             hidden_dcards.push_back(card);
     }
 
-    Card BlackjackModel::extractLastCard()
+    bool BlackjackModel::getMarcarCorte() const
     {
-        assert(!pile_deck.empty());
-        Card card = pile_deck.back();
-        pile_deck.pop_back();
+        return marcar_corte;
+    }
+
+    Card BlackjackModel::extractLastCard(std::vector<Card> &deck)
+    {
+        if (&deck == &pile_deck)
+            onEmptyPileDeck();
+
+        assert(!deck.empty());
+        Card card = deck.back();
+        deck.pop_back();
         return card;
     }
 
-    Card BlackjackModel::extractCard(int index)
+    Card BlackjackModel::extractCard(int index) // ! quitar no se usa de momento
     {
         assert(index >= 0 && index < static_cast<int>(pile_deck.size()));
         Card card = pile_deck[index];
@@ -119,7 +130,7 @@ namespace blackjack
 
     int BlackjackModel::cardsLeftInShoe() const
     {
-        return 0;
+        return static_cast<int>(pile_deck.size());
     }
 
     int BlackjackModel::seatCount() const
@@ -184,12 +195,15 @@ namespace blackjack
     //! IModel
     void BlackjackModel::startRound(const int *bets)
     {
+        addAllCardsToDiscardDeck_atRoundEnded(); // antes del clear
         current_vuelta = 0;
         current_spot = 0;
         turno = 0;
         hand_count = 0;
         hidden_dcards.clear();
         up_dcards.clear();
+        if (comprobarCorte())
+            marcar_corte = true;
         for (int i = 0; i < kMaxSeats; i++)
         {
             seats[i].hand.clear();
@@ -205,13 +219,40 @@ namespace blackjack
             seats[i].hand.push_back(tmp_hand);
             printf("sitio: %d, chips: %d\n", i, seats[i].chips);
         }
-        std::shuffle(pile_deck.begin(), pile_deck.end(), generator);
+        if (need_to_shuffle)
+        {
+            std::shuffle(pile_deck.begin(), pile_deck.end(), generator);
+            need_to_shuffle = false;
+        }
+        if (marcar_corte)
+        {
+            while (!discard_deck.empty())
+            {
+                Card card_to_pile = extractLastCard(discard_deck);
+                pile_deck.push_back(card_to_pile);
+            }
+            std::shuffle(pile_deck.begin(), pile_deck.end(), generator);
+            marcar_corte = false;
+        }
         set_active_players(); // setear jugadores activos en esta ronda
+    }
+    void BlackjackModel::onEmptyPileDeck()
+    {
+        if (!pile_deck.empty())
+            return;
+        while (!discard_deck.empty())
+        {
+            pile_deck.push_back(discard_deck.back());
+            discard_deck.pop_back();
+        }
+        std::shuffle(pile_deck.begin(), pile_deck.end(), generator);
+        marcar_corte = true; // para recordar que al empezar la siguiente ronda toca reunir y barajar todo, aunque hayan mas de 52 cards
     }
     bool BlackjackModel::dealNext()
     {
         //! Falta Consultar openingDealerCard(current_vuelta) para saber si el dealer recibe carta y si va visible u oculta.
         //! Registrar los eventos de las cartas repartidas
+
         while (current_vuelta < 2)
         {
             if (current_spot < kMaxSeats)
@@ -222,13 +263,13 @@ namespace blackjack
                     continue;
 
                 // extraer carta
-                Card card = extractLastCard();
+                Card card = extractLastCard(pile_deck);
                 addCardtoPlayer(card, seat, 0);
                 // repartir si corresponde
                 return true;
             }
             // repartir al dealer
-            Card card = extractLastCard();
+            Card card = extractLastCard(pile_deck);
             addCardtoDealer(card, current_vuelta);
             // preparar la siguiente vuelta
             current_spot = 0;
@@ -240,6 +281,7 @@ namespace blackjack
     void BlackjackModel::avanzarTurno()
     {
         assert(turno >= 0 && turno <= 7 && "turno fuera de rango");
+        hand_count = 0;
         ++turno;
     }
     bool BlackjackModel::avanzarMano(int seat)
@@ -281,7 +323,7 @@ namespace blackjack
             // 3 si la necesita
             //    - Extraer una carta de pile_deck
             //    - Añadirla a la mano
-            Card card = extractLastCard();
+            Card card = extractLastCard(pile_deck);
             addCardtoPlayer(card, seat, hand);
         }
         // 4 Comprobar si la mano debe finalizar
@@ -303,7 +345,7 @@ namespace blackjack
 
         case Action::Hit:
         {
-            Card card_to_deal = extractLastCard();
+            Card card_to_deal = extractLastCard(pile_deck);
             addCardtoPlayer(card_to_deal, seat, hand);
             HandState tmp_hand = this->hand(seat, hand);
             if (model_rules.endsTurn(tmp_hand))
@@ -312,8 +354,7 @@ namespace blackjack
         }
 
         case Action::Stand:
-            if (!avanzarMano(seat))
-                avanzarTurno();
+            seats[seat].hand[hand].state.finished = true;
             return true;
 
         case Action::Double:
@@ -325,7 +366,7 @@ namespace blackjack
             seats[seat].hand[hand].state.bet *= 2;
             seats[seat].hand[hand].state.doubled = true;
 
-            Card card = extractLastCard();
+            Card card = extractLastCard(pile_deck);
             addCardtoPlayer(card, seat, hand);
             HandState tmp_hand = this->hand(seat, hand);
             if (model_rules.endsTurn(tmp_hand))
@@ -359,7 +400,7 @@ namespace blackjack
 
             seats[seat].hand.push_back(new_hand);
 
-            Card card = extractLastCard();
+            Card card = extractLastCard(pile_deck);
             addCardtoPlayer(card, seat, hand);
             return true;
         }
@@ -386,6 +427,7 @@ namespace blackjack
     {
         return seats[seat];
     }
+
     bool BlackjackModel::playDealer()
     {
         // turn up card/s
@@ -400,11 +442,12 @@ namespace blackjack
         // draw card mientras pueda
         if (model_rules.dealerDraws(up_dcards, hasHandsDepedingOnDealer()))
         {
-            up_dcards.push_back(extractLastCard());
+            up_dcards.push_back(extractLastCard(pile_deck));
             return true;
         }
         return false;
     }
+
     bool BlackjackModel::hasHandsDepedingOnDealer()
     {
         // por cada asiento
@@ -444,10 +487,49 @@ namespace blackjack
             // ! liquidar el seguro de este jugador (de momento no hay seguro)
         }
     }
+
+    void BlackjackModel::addAllCardsToDiscardDeck_atRoundEnded()
+    {
+        // cartas de lo jugadores
+        for (int seat = 0; seat < seatCount(); seat++)
+        {
+            for (int hand = 0; hand < handCount(seat); hand++)
+            {
+                HandState mano = this->hand(seat, hand);
+                for (const Card &card : mano.cards)
+                {
+                    if (!mano.cards.empty())
+                        discard_deck.push_back(card);
+                }
+            }
+        }
+        // cartas del dealer
+        for (const Card &card : dealerUpCards())
+        {
+            if (!dealerUpCards().empty())
+                discard_deck.push_back(card);
+        }
+        for (const Card &card : dealerHiddenCards())
+        {
+            if (!dealerHiddenCards().empty())
+                discard_deck.push_back(card);
+        }
+    }
+    bool BlackjackModel::comprobarCorte() const
+    {
+        return static_cast<int>(pile_deck.size()) <= 52;
+    }
+
+    std::span<const Card> BlackjackModel::dealerHiddenCards() const
+    {
+        return hidden_dcards;
+    }
+
     void BlackjackModel::setRondaLiquidada(bool estado)
     {
         ronda_liquidada = estado;
     }
+
     bool BlackjackModel::getRondaLiquidada() const
     {
         return ronda_liquidada;
