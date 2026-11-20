@@ -231,9 +231,11 @@ namespace blackjack
                 std::string cadena = std::to_string(handValue(hand.cards));
 
                 if (handValue(hand.cards) < 21)
-                    printColoredSquare({x, y}, 125, 125, 125);
+                    printColoredSquare({x, y}, 0, 147, 57);
+                else if (handValue(hand.cards) == 21)
+                    printColoredSquare({x, y}, 233, 189, 21);
                 else
-                    printColoredSquare({x, y}, 255, 0, 0);
+                    printColoredSquare({x, y}, 140, 0, 0);
 
                 esat::DrawSetStrokeColor(255, 255, 255, 255);
                 esat::DrawSetFillColor(255, 255, 255, 255);
@@ -444,13 +446,48 @@ namespace blackjack
 
                 for (int frame = 0; frame < 8; ++frame)
                 {
-                    card_animation_frames[rank][suit][frame] = esat::SubSprite(
-                        card_animations[rank][suit],
-                        frame * 135, 0,
-                        135, 189);
-
+                    card_animation_frames[rank][suit][frame] = esat::SubSprite(card_animations[rank][suit], frame * 135, 0, 135, 189);
                     assert(card_animation_frames[rank][suit][frame] != nullptr);
                 }
+            }
+        }
+
+        //! FIREWORKS, EXPLOSION
+        //! FIREWORKS
+        const int n_firework_type = 3;
+        const int n_firework_frame = 9;
+        const char *firework[] = {"amarillo", "azul", "rojo"};
+        const std::string fir_base = "src/game/sprites/";
+
+        for (int i = 0; i < n_firework_type; ++i)
+        {
+            const std::string path = fir_base + "fireworks/" + firework[i] + ".png";
+            sprite_sheet[i] = esat::SpriteFromFile(path.c_str());
+            assert(sprite_sheet[i] != nullptr && "Error cargando fireworks");
+
+            const int width = esat::SpriteWidth(sprite_sheet[i]);
+            const int height = esat::SpriteHeight(sprite_sheet[i]);
+            for (int frame = 0; frame < n_firework_frame; ++frame)
+            {
+                const int x = frame * width / n_firework_frame;
+                const int next_x = (frame + 1) * width / n_firework_frame;
+
+                sprites_fireworks[i][frame] = esat::SubSprite(sprite_sheet[i], x, 0, next_x - x, height);
+                assert(sprites_fireworks[i][frame] != nullptr && "Error recortando fireworks");
+            }
+        }
+        //! EXPLOSION
+        // Usamos la posición 3, después de los tres fireworks.
+        sprite_sheet[3] = esat::SpriteFromFile(
+            "src/game/sprites/explosion/explosion.png");
+        assert(sprite_sheet[3] != nullptr && "Error cargando explosion");
+        for (int row = 0; row < 3; ++row)
+        {
+            for (int col = 0; col < 3; ++col)
+            {
+                const int frame = col + 3 * row;
+                sprite_explosion[frame] = esat::SubSprite(sprite_sheet[3], col * 418, row * 418, 418, 418);
+                assert(sprite_explosion[frame] != nullptr && "Error recortando explosion");
             }
         }
     }
@@ -590,6 +627,14 @@ namespace blackjack
         return card_sprites[static_cast<int>(card.rank) - 1][suit];
     }
 
+    void EsatView::drawAnimationOnce(const esat::SpriteHandle *frames, float x, float y, double start_time)
+    {
+        int frame = static_cast<int>((esat::Time() - start_time) / 100.0);
+        if (frame >= 9)
+            return;
+        esat::DrawSprite(frames[frame], x, y);
+    }
+
     int EsatView::chooseRules(const IRules *const *rules, int count)
     {
         return -1;
@@ -643,6 +688,11 @@ namespace blackjack
             printAlphaLerpRect({spot_pos[seat].x - 45, spot_pos[seat].y - 70}, 250, 300);
         }
         printHandSumatory(table);
+        for (int i = 0; i < table.seatCount(); ++i)
+        {
+            if (explosion_active[i])
+                drawAnimationOnce(sprite_explosion, spot_pos[i].x, spot_pos[i].y, explosion_start[i]);
+        }
     }
     bool EsatView::busy() const
     {
@@ -654,5 +704,27 @@ namespace blackjack
     }
     void EsatView::onEvent(const GameEvent &event, const ITable &table)
     {
+        switch (event.type)
+        {
+        case EventType::HandBust:
+            for (int i = 0; i < table.seatCount(); i++)
+            {
+                const int seat = event.seat;
+                if (!explosion_active[seat])
+                {
+                    explosion_start[seat] = esat::Time();
+                    explosion_active[seat] = true;
+                }
+                break;
+            }
+            break;
+        case EventType::RoundStart:
+            for (int i = 0; i < 7; ++i)
+                explosion_active[i] = false;
+            break;
+
+        default:
+            break;
+        }
     }
 }

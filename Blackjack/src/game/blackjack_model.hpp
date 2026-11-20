@@ -2,7 +2,7 @@
 #ifndef BLACKJACK_MODEL
 #define BLACKJACK_MODEL 1
 #include <vector>
-#include <algorithm>
+#include <queue>
 #include <random>
 #include "blackjack/imodel.hpp"
 #include "game_rules.hpp"
@@ -29,7 +29,8 @@ namespace blackjack
         std::vector<Card> up_dcards;     // 1
         std::vector<Card> discard_deck;  // cards discarded every time a round ends
         TableSettings table_settings;
-        const IRules &model_rules; // consulta de reglas
+        const IRules &model_rules;             // consulta de reglas
+        std::queue<ModelEvent> pending_events; //! eventos
         std::mt19937 generator;
 
         int turno;

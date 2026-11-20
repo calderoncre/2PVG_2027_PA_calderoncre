@@ -49,7 +49,8 @@ namespace blackjack
     Dealt,         ///< A card was dealt face up.
     DealtFaceDown, ///< A card was dealt face down to the dealer.
     TurnedUp,      ///< A face-down dealer card was turned up.
-    Shuffled       ///< The shoe was reshuffled (R11, R29).
+    Shuffled,      ///< The shoe was reshuffled (R11, R29).
+    HandBust
   };
 
   /** @brief Something the model did, reported once through popEvent(). */

@@ -36,7 +36,8 @@ namespace blackjack
     InsuranceResult, ///< seat's insurance settles with net amount.
     RoundEnd,        ///< The round has been settled; amount = round.
     PlayerBroke,     ///< seat cannot afford the minimum bet any more.
-    GameOver         ///< No more rounds; amount = rounds played.
+    GameOver,        ///< No more rounds; amount = rounds played.
+    HandBust
   };
 
   /** @brief One thing that happened at the table. */

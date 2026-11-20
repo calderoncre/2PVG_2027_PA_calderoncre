@@ -26,6 +26,11 @@ namespace blackjack
                     win_width - 650.0f + i * 150.0f,
                     win_height - 120.0f};
             }
+            for (int i = 0; i < 7; i++)
+            {
+                explosion_start[i] = 0.0f;
+                explosion_active[i] = false;
+            }
         }
         ~EsatView()
         {
@@ -64,6 +69,11 @@ namespace blackjack
         esat::SpriteHandle card_animation_frames[4][4][8]{};
         esat::SpriteHandle button_sprites[5]{};
         esat::SpriteHandle chips_sprites[n_chips_types]{};
+
+        esat::SpriteHandle sprites_fireworks[3][9]{};
+        esat::SpriteHandle sprite_sheet[4]{};
+        esat::SpriteHandle sprite_explosion[9]{};
+
         esat::SpriteHandle backside_card_sprite = nullptr;
         esat::SpriteHandle background_card_sprite = nullptr;
         esat::SpriteHandle chip_stack_sprite = nullptr;
@@ -77,6 +87,9 @@ namespace blackjack
         // juego
         int turn;
         Move action_Selected;
+
+        double explosion_start[7] = {};
+        bool explosion_active[7] = {};
 
         void LoadSprites();
         void ReleaseSprites();
@@ -95,6 +108,7 @@ namespace blackjack
         void drawFloatingCard(esat::SpriteHandle sprite, float x, float y, float phase) const;
         void setSpotPositions();
         void printHandSumatory(const ITable &table) const;
+        void drawAnimationOnce(const esat::SpriteHandle *frames, float x, float y, double start_time);
     };
 }
 

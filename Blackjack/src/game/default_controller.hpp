@@ -6,6 +6,7 @@
 #include "blackjack_model.hpp"
 #include "game_Phases.hpp"
 #include "game_rules.hpp"
+#include "Iview.hpp"
 using namespace blackjack;
 namespace blackjack
 {
@@ -17,12 +18,15 @@ namespace blackjack
         bool isGameOver() const override;
         bool hasBetAt(const int seat) const;
         void limpiarInitialBets();
+        void processEvents();
 
         GameRules rules;
         int bets[kMaxSeats]{};
         BlackjackModel model{rules};
         EsatView vista;
         Game_Phases showing_phase = Game_Phases::APUESTAS;
+        double inicio_espera = 0.0;
+
         int mano_iniciada;
 
     public:

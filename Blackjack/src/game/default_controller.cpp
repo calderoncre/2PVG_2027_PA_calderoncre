@@ -1,5 +1,6 @@
 #include "default_controller.hpp"
 #include "esat/input.h"
+#include "esat/time.h"
 #include <cstdio>
 using namespace blackjack;
 
@@ -12,6 +13,32 @@ bool Controller::isGameOver() const
 {
     return false;
 }
+
+void Controller::processEvents()
+{
+    ModelEvent model_event{};
+
+    while (model.popEvent(&model_event)) //! popEvent
+    {
+        switch (model_event.type)
+        {
+        case ModelEventType::HandBust:
+        {
+            GameEvent event{};
+            event.type = EventType::HandBust;
+            event.seat = model_event.seat;
+            event.hand = model_event.hand;
+
+            vista.onEvent(event, model);
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+}
+
 void Controller::update()
 {
     switch (showing_phase)
@@ -43,6 +70,10 @@ void Controller::update()
                 {
                     mano_iniciada = false;
                     model.startRound(bets);
+
+                    GameEvent event{};
+                    event.type = EventType::RoundStart;
+                    vista.onEvent(event, model);
                     showing_phase = Game_Phases::REPARTO;
                     break;
                 }
@@ -127,12 +158,18 @@ void Controller::update()
             model.settle();
             model.setRondaLiquidada(true);
             limpiarInitialBets();
+
+            inicio_espera = esat::Time();
         }
-        showing_phase = Game_Phases::APUESTAS;
+
+        if (haPasadoTiempo(inicio_espera, 900.0))
+            showing_phase = Game_Phases::APUESTAS;
+
         break;
     default:
         break;
     }
+    processEvents();
 }
 
 void Controller::limpiarInitialBets()
@@ -143,4 +180,9 @@ void Controller::limpiarInitialBets()
 bool Controller::hasBetAt(const int seat) const
 {
     return seat >= 0 && seat < kMaxSeats && bets[seat] >= model.minBet() && bets[seat] <= model.maxBet() && bets[seat] <= model.chips(seat);
+}
+
+bool haPasadoTiempo(double inicio_espera, double duracion_espera)
+{
+    return esat::Time() - inicio_espera >= duracion_espera;
 }
