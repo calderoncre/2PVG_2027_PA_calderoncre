@@ -1,4 +1,5 @@
 #include "game_rules.hpp"
+#include "hand_value.hpp"
 /** @return Short name shown in the menus. */
 const char *GameRules::name() const { return "s"; }
 
@@ -50,34 +51,6 @@ bool GameRules::isAllowed(const HandState &hand, int chips, int hand_count, Acti
 BuyRange GameRules::buyRange(const HandState &hand, int chips,
                              int min_bet) const { return {}; }
 
-int handValue(std::span<const Card> cards)
-{
-    int total = 0;
-    int ases = 0;
-
-    for (const Card &card : cards)
-    {
-        int valor = static_cast<int>(card.rank);
-
-        if (card.rank == Rank::Ace)
-        {
-            total += 11;
-            ++ases;
-        }
-        else
-        {
-            total += valor > 10 ? 10 : valor;
-        }
-    }
-
-    while (total > 21 && ases > 0)
-    {
-        total -= 10; // un as pasa de valer 11 a valer 1
-        --ases;
-    }
-
-    return total;
-}
 
 bool GameRules::endsTurn(const HandState &hand) const
 {

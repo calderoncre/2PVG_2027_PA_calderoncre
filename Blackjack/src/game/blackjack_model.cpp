@@ -1,6 +1,7 @@
 #include <vector>
 #include "blackjack_model.hpp"
 #include "cassert"
+#include "hand_value.hpp"
 namespace blackjack
 {
     // pasamos la vista al controlador desde iOberver
@@ -71,35 +72,6 @@ namespace blackjack
         table_settings.seed = 99; // posteriormente rand();
     }
 
-    int handValue(std::span<const Card> cards)
-    {
-        int total = 0;
-        int ases = 0;
-
-        for (const Card &card : cards)
-        {
-            int valor = static_cast<int>(card.rank);
-
-            if (card.rank == Rank::Ace)
-            {
-                total += 11;
-                ++ases;
-            }
-            else
-            {
-                total += valor > 10 ? 10 : valor;
-            }
-        }
-
-        while (total > 21 && ases > 0)
-        {
-            total -= 10; // un as pasa de valer 11 a valer 1
-            --ases;
-        }
-
-        return total;
-    }
-
     void BlackjackModel::addCardtoPlayer(Card card, int seat, int hand)
     {
         seats[seat].hand[hand].cards.push_back(card);
@@ -109,6 +81,15 @@ namespace blackjack
         {
             ModelEvent event{};
             event.type = ModelEventType::HandBust;
+            event.seat = seat;
+            event.hand = hand;
+
+            pending_events.push(event);
+        }
+        if (handValue(mano.cards) == 21)
+        {
+            ModelEvent event{};
+            event.type = ModelEventType::OnBlackjack;
             event.seat = seat;
             event.hand = hand;
 

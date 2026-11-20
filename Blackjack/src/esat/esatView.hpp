@@ -30,6 +30,7 @@ namespace blackjack
             {
                 explosion_start[i] = 0.0f;
                 explosion_active[i] = false;
+                fireworks_active[i] = false;
             }
         }
         ~EsatView()
@@ -90,6 +91,8 @@ namespace blackjack
 
         double explosion_start[7] = {};
         bool explosion_active[7] = {};
+        bool fireworks_active[7]={};
+        double fireworks_start[7]={};
 
         void LoadSprites();
         void ReleaseSprites();
@@ -109,6 +112,7 @@ namespace blackjack
         void setSpotPositions();
         void printHandSumatory(const ITable &table) const;
         void drawAnimationOnce(const esat::SpriteHandle *frames, float x, float y, double start_time);
+        void drawFireworks(int seat);
     };
 }
 

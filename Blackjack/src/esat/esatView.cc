@@ -6,6 +6,8 @@
 #include "esat/input.h"
 #include "esat/time.h"
 #include "cassert"
+#include "../game/hand_value.hpp"
+
 using namespace blackjack;
 namespace blackjack
 {
@@ -42,6 +44,24 @@ namespace blackjack
                 {win_width / 2 + 100, win_height - 320}};
         for (int i = 0; i < 7; i++)
             spot_pos[i] = tmp[i];
+    }
+    void EsatView::drawFireworks(int seat)
+    {   
+        const double transcurrido = esat::Time() - fireworks_start[seat];
+        const double delays[3]= {0.0, 280.0, 550.0};
+        const esat::Vec2 offsets[3] = {{-120.0f,-210.0f}, {20.0f, -125.0f}, {110.0f,0-160.0f}};
+        for (int i = 0; i < 3; i++)
+        {
+            double tiempo_animacion = transcurrido - delays[i];
+            if(tiempo_animacion < 0.0 || tiempo_animacion > 900.0)
+                continue;
+            int frame = static_cast<int>(tiempo_animacion / 100.0);
+            float x = spot_pos[seat].x + offsets[i].x;
+            float y = spot_pos[seat].y + offsets[i].y;
+            esat::DrawSprite(sprites_fireworks[i][frame],x,y);
+        }
+        if (transcurrido >= 1450.0)
+            fireworks_active[seat] = false;
     }
     void EsatView::updateJUEGO()
     {
@@ -150,7 +170,7 @@ namespace blackjack
         }
 
         drawChipStacks(bets);
-    }
+    }  
 
     void EsatView::printREPARTOS(const ITable &table) const
     {
@@ -180,36 +200,7 @@ namespace blackjack
         }
         //! Imprimir suma total de cartas de cada jugador
     }
-
-    int handValue(std::span<const Card> cards)
-    {
-        int total = 0;
-        int ases = 0;
-
-        for (const Card &card : cards)
-        {
-            int valor = static_cast<int>(card.rank);
-
-            if (card.rank == Rank::Ace)
-            {
-                total += 11;
-                ++ases;
-            }
-            else
-            {
-                total += valor > 10 ? 10 : valor;
-            }
-        }
-
-        while (total > 21 && ases > 0)
-        {
-            total -= 10; // un as pasa de valer 11 a valer 1
-            --ases;
-        }
-
-        return total;
-    }
-
+    
     void EsatView::printHandSumatory(const ITable &table) const
     {
         const esat::Vec2 positions[] = {
@@ -629,9 +620,12 @@ namespace blackjack
 
     void EsatView::drawAnimationOnce(const esat::SpriteHandle *frames, float x, float y, double start_time)
     {
-        int frame = static_cast<int>((esat::Time() - start_time) / 100.0);
-        if (frame >= 9)
+        
+        double transcurrido = esat::Time() - start_time;
+        if (transcurrido < 0.0 || transcurrido >= 900.0)
             return;
+
+        int frame = static_cast<int>(transcurrido / 100.0);
         esat::DrawSprite(frames[frame], x, y);
     }
 
@@ -692,6 +686,8 @@ namespace blackjack
         {
             if (explosion_active[i])
                 drawAnimationOnce(sprite_explosion, spot_pos[i].x, spot_pos[i].y, explosion_start[i]);
+            if(fireworks_active[i])
+                drawFireworks(i);
         }
     }
     bool EsatView::busy() const
@@ -720,9 +716,22 @@ namespace blackjack
             break;
         case EventType::RoundStart:
             for (int i = 0; i < 7; ++i)
+            {
                 explosion_active[i] = false;
+                fireworks_active[i] = false;
+            }
+            
             break;
-
+        case EventType::OnBlackjack:
+        {
+            const int seat = event.seat;
+            if (seat >= 0 && seat < 7)
+            {
+                fireworks_start[seat] = esat::Time();
+                fireworks_active[seat] = true;
+            }
+        }
+            break;
         default:
             break;
         }

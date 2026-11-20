@@ -6,7 +6,6 @@
 #include "blackjack_model.hpp"
 #include "game_Phases.hpp"
 #include "game_rules.hpp"
-#include "Iview.hpp"
 using namespace blackjack;
 namespace blackjack
 {

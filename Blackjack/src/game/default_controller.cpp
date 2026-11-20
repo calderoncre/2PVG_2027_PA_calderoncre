@@ -14,6 +14,11 @@ bool Controller::isGameOver() const
     return false;
 }
 
+bool haPasadoTiempo(double inicio_espera, double duracion_espera)
+{
+    return esat::Time() - inicio_espera >= duracion_espera;
+}
+
 void Controller::processEvents()
 {
     ModelEvent model_event{};
@@ -28,7 +33,15 @@ void Controller::processEvents()
             event.type = EventType::HandBust;
             event.seat = model_event.seat;
             event.hand = model_event.hand;
-
+            vista.onEvent(event, model);
+            break;
+        }
+        case ModelEventType::OnBlackjack:
+        {
+            GameEvent event{};
+            event.type = EventType::OnBlackjack;
+            event.seat = model_event.seat;
+            event.hand = model_event.hand;
             vista.onEvent(event, model);
             break;
         }
@@ -162,7 +175,7 @@ void Controller::update()
             inicio_espera = esat::Time();
         }
 
-        if (haPasadoTiempo(inicio_espera, 900.0))
+        if (haPasadoTiempo(inicio_espera, 2000.0))
             showing_phase = Game_Phases::APUESTAS;
 
         break;
@@ -182,7 +195,4 @@ bool Controller::hasBetAt(const int seat) const
     return seat >= 0 && seat < kMaxSeats && bets[seat] >= model.minBet() && bets[seat] <= model.maxBet() && bets[seat] <= model.chips(seat);
 }
 
-bool haPasadoTiempo(double inicio_espera, double duracion_espera)
-{
-    return esat::Time() - inicio_espera >= duracion_espera;
-}
+

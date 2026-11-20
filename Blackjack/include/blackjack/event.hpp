@@ -37,7 +37,8 @@ namespace blackjack
     RoundEnd,        ///< The round has been settled; amount = round.
     PlayerBroke,     ///< seat cannot afford the minimum bet any more.
     GameOver,        ///< No more rounds; amount = rounds played.
-    HandBust
+    HandBust,
+    OnBlackjack
   };
 
   /** @brief One thing that happened at the table. */
